@@ -2,7 +2,7 @@
 Cert Manager Migration from BoltDB to PostgreSQL
 
 ## Build Instructions
-1. Clone repository to your $GOPATH/github.com/liquidweb 
+1. Clone repository to your `$GOPATH/src/github.com/liquidweb`
 2. Download glide if you haven't already
    `go get github.com/Masterminds/glide`
 3. Download glide dependencies for this project
