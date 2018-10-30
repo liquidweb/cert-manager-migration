@@ -1,0 +1,6 @@
+vendor
+.idea
+*~
+migration
+migration.exe
+data.db
