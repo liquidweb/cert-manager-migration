@@ -1,3 +1,0 @@
-package: github.com/liquidweb/cert-manager-migration
-import:
-- package: github.com/boltdb/bolt
