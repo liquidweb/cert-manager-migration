@@ -3,12 +3,17 @@ package main
 import (
 	"flag"
 	"github.com/boltdb/bolt"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"path"
 )
 
 func main() {
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+		TimestampFormat : "2006-01-02 15:04:05",
+	})
+
 	var workingDir, err = os.Getwd()
 	if err != nil {
 		log.Fatal("Cannot get current working directory.")
@@ -27,7 +32,9 @@ func main() {
 	defer db.Close()
 
 	printKeyValuePairs(*db, getBucketNames(*db))
-	log.Printf("Done")
+	log.Info("****************************************")
+	log.Info("*************** Done *******************")
+	log.Info("****************************************")
 }
 
 func getBucketNames(db bolt.DB) []string {
@@ -46,17 +53,17 @@ func getBucketNames(db bolt.DB) []string {
 func printKeyValuePairs(db bolt.DB, bucketNames []string) {
 	db.View(func(tx *bolt.Tx) error {
 		for _, bucket := range bucketNames {
-			log.Printf("************** %v **************", bucket)
+			log.Info("*******************************************")
+			log.Infof("************** %v **************", bucket)
+			log.Info("*******************************************")
 
 			b := tx.Bucket([]byte(bucket))
 
 			c := b.Cursor()
 
 			for k, v := c.First(); k != nil; k, v = c.Next() {
-				log.Printf("key=%s, value=%s\n", k, v)
+				log.Infof("key=%s, value=%s\n", k, v)
 			}
-
-			log.Printf("*********************************")
 		}
 		return nil
 	})
