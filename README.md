@@ -6,7 +6,12 @@ Cert Manager Migration from BoltDB to PostgreSQL
 2. [Download](https://golang.github.io/dep/docs/installation.html) dep if you haven't already   
 3. Download dep dependencies for this project
    `dep ensure`
-4. Build this project
+4. Modify your `conf.yaml` file with appropriate values
+5. Build this project
    `go build migration.go`
-5. Run this project 
-   `go run migration.go -data-dir={path to bolt db file}` (Code assumes you have a data.db file) (You can leave data-dir file off if data.db is in your current working directory)
+6. Modify your `conf.yaml` file with appropriate values   
+7. Run this project 
+    1. Print Bolt Data `go run migration.go print-bolt-data`
+    2. Create DB Tables `go run migration.go create-tables`
+    3. Drop DB Tables `go run migration.go drop-tables`
+   

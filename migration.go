@@ -1,12 +1,45 @@
 package main
 
 import (
-	"flag"
+	"fmt"
 	"github.com/boltdb/bolt"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"os"
 	"path"
 )
+
+type CertDetail struct {
+	gorm.Model
+	Domain string `gorm:"unique"`
+	Value string
+}
+
+type DomainAltname struct {
+	gorm.Model
+	Domain string `gorm:"unique"`
+	Value string
+}
+
+type UserInfo struct {
+	gorm.Model
+	Email string `gorm:"unique"`
+	Value string
+}
+
+type conf struct {
+	BoltDataDir string `yaml:"bolt_data_dir"`
+	BoltDataFile string `yaml:"bolt_data_file"`
+	PostgresHost string `yaml:"pg_host"`
+	PostgresPort int `yaml:"pg_port"`
+	PostgresDatabaseName string `yaml:"pg_db_name"`
+	PostgresUser string `yaml:"pg_user"`
+	PostgresPassword string `yaml:"pg_password"`
+	PostgresSslMode string `yaml:"pg_ssl_mode"`
+}
 
 func main() {
 	log.SetFormatter(&log.TextFormatter{
@@ -14,27 +47,78 @@ func main() {
 		TimestampFormat : "2006-01-02 15:04:05",
 	})
 
-	var workingDir, err = os.Getwd()
-	if err != nil {
-		log.Fatal("Cannot get current working directory.")
+	var conf conf
+	conf.getConf()
+
+	printLogMsg("Starting Cert Manager Migration")
+	log.Info()
+
+	if len(os.Args) <= 1 {
+		argumentError()
 	}
 
-	var dataDir string
-	flag.StringVar(&dataDir, "data-dir", workingDir, "Data directory path")
-	flag.Parse()
+	switch os.Args[1] {
+	case "print-bolt-data":
+		printLogMsg("Print Bolt Data")
+		log.Info()
+		var boltDb = openBoltDb(conf)
+		printBoltKeyValuePairs(*boltDb, getBucketNames(*boltDb))
+		defer boltDb.Close()
+	case "create-tables":
+		printLogMsg("Create Tables")
+		log.Info()
+		var postgresDb = openPostgresDb(conf)
+		createTables(*postgresDb)
+		defer postgresDb.Close()
+	case "drop-tables":
+		printLogMsg("Drop Tables")
+		log.Info()
+		var postgresDb = openPostgresDb(conf)
+		dropTables(*postgresDb)
+		defer postgresDb.Close()
+	default:
+		argumentError()
+	}
 
-	dbPath := path.Join(dataDir, "data.db")
+	printLogMsg("Done")
+}
 
-	db, err := bolt.Open(dbPath, 0600, nil)
+func openBoltDb(conf conf) *bolt.DB {
+	dbPath := path.Join(conf.BoltDataDir, conf.BoltDataFile)
+
+	boltDb, err := bolt.Open(dbPath, 0600, nil)
 	if err != nil {
 		log.Fatalf("Error while creating bolt database file at %v: %v", dbPath, err)
 	}
-	defer db.Close()
 
-	printKeyValuePairs(*db, getBucketNames(*db))
-	log.Info("****************************************")
-	log.Info("*************** Done *******************")
-	log.Info("****************************************")
+	return boltDb
+}
+
+func openPostgresDb(conf conf) *gorm.DB {
+	args := fmt.Sprintf("host=%v port=%d user=%v dbname=%v password=%v sslmode=%v", conf.PostgresHost, conf.PostgresPort, conf.PostgresUser, conf.PostgresDatabaseName, conf.PostgresPassword, conf.PostgresSslMode)
+	postgresDb, err := gorm.Open("postgres", args)
+	if err != nil {
+		log.Fatalf("Error while connecting to postgres database: %v", err)
+	}
+	return postgresDb
+}
+
+func createTables(db gorm.DB) {
+	printLogMsg("Creating Tables: CERT_DETAILS, DOMAIN_ALTNAMES, USER_INFOS")
+	log.Info()
+
+	db.AutoMigrate(&CertDetail{})
+	db.AutoMigrate(&DomainAltname{})
+	db.AutoMigrate(&UserInfo{})
+}
+
+func dropTables(db gorm.DB) {
+	printLogMsg("Deleting Tables: CERT_DETAILS, DOMAIN_ALTNAMES, USER_INFOS")
+	log.Info()
+
+	db.DropTable(&CertDetail{})
+	db.DropTable(&DomainAltname{})
+	db.DropTable(&UserInfo{})
 }
 
 func getBucketNames(db bolt.DB) []string {
@@ -50,12 +134,10 @@ func getBucketNames(db bolt.DB) []string {
 	return buckets
 }
 
-func printKeyValuePairs(db bolt.DB, bucketNames []string) {
+func printBoltKeyValuePairs(db bolt.DB, bucketNames []string) {
 	db.View(func(tx *bolt.Tx) error {
 		for _, bucket := range bucketNames {
-			log.Info("*******************************************")
-			log.Infof("************** %v **************", bucket)
-			log.Info("*******************************************")
+			printLogMsg(fmt.Sprintf("%v", bucket))
 
 			b := tx.Bucket([]byte(bucket))
 
@@ -67,4 +149,28 @@ func printKeyValuePairs(db bolt.DB, bucketNames []string) {
 		}
 		return nil
 	})
+}
+
+func (c *conf) getConf() *conf {
+	yamlFile, err := ioutil.ReadFile("conf.yaml")
+	if err != nil {
+		log.Fatalf("yamlFile.Get err   #%v ", err)
+	}
+
+	err = yaml.Unmarshal(yamlFile, c)
+	if err != nil {
+		log.Fatalf("Unmarshal: %v", err)
+	}
+
+	return c
+}
+
+func printLogMsg(message string) {
+	log.Info("****************************************")
+	log.Info(message)
+	log.Info("****************************************")
+}
+
+func argumentError() {
+	log.Fatal("No parameter specified: Use: print-bolt-data create-tables drop-tables")
 }
