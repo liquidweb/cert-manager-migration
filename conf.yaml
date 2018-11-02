@@ -5,4 +5,4 @@ pg_port: 5432
 pg_user: "postgres"
 pg_db_name: "postgresdatabase"
 pg_password: "password"
-pg_ssl_mode: "disable"
+pg_ssl_mode: "require"
