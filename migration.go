@@ -76,10 +76,20 @@ func main() {
 		var postgresDb = openPostgresDb(conf)
 		dropTables(*postgresDb)
 		defer postgresDb.Close()
+	case "migrate":
+		printLogMsg("BoltDB to PostgreSQL Migration")
+		log.Info()
+		var postgresDb = openPostgresDb(conf)
+		var boltDb = openBoltDb(conf)
+		createTables(*postgresDb)
+		doMigration(*postgresDb, *boltDb)
+		defer postgresDb.Close()
+		defer boltDb.Close()
 	default:
 		argumentError()
 	}
 
+	log.Info()
 	printLogMsg("Done")
 }
 
@@ -113,12 +123,52 @@ func createTables(db gorm.DB) {
 }
 
 func dropTables(db gorm.DB) {
-	printLogMsg("Deleting Tables: CERT_DETAILS, DOMAIN_ALTNAMES, USER_INFOS")
+	printLogMsg("Dropping Tables: CERT_DETAILS, DOMAIN_ALTNAMES, USER_INFOS")
 	log.Info()
 
 	db.DropTable(&CertDetail{})
 	db.DropTable(&DomainAltname{})
 	db.DropTable(&UserInfo{})
+}
+
+func doMigration(postgresDb gorm.DB, boltDb bolt.DB) {
+	printLogMsg("Migrating Tables")
+	log.Info()
+
+	boltDb.View(func(tx *bolt.Tx) error {
+		printLogMsg("Migrating cert-details into CERT_DETAILS\n")
+		b := tx.Bucket([]byte("cert-details"))
+		c := b.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			log.Infof("Migrating Domain: %s", k)
+			domain := string(k[:])
+			value := string(v[:])
+			postgresDb.Create(&CertDetail{Domain: domain, Value: value})
+		}
+
+		log.Info()
+		printLogMsg("Migrating domain-altnames into DOMAIN_ALTNAMES\n")
+		b = tx.Bucket([]byte("domain-altnames"))
+		c = b.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			log.Infof("Migrating Domain: %s", k)
+			domain := string(k[:])
+			value := string(v[:])
+			postgresDb.Create(&DomainAltname{Domain: domain, Value: value})
+		}
+
+		log.Info()
+		printLogMsg("Migrating user-info into USER_INFOS\n")
+		b = tx.Bucket([]byte("user-info"))
+		c = b.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			log.Infof("Migrating Email: %s", k)
+			email := string(k[:])
+			value := string(v[:])
+			postgresDb.Create(&UserInfo{Email: email, Value: value})
+		}
+		return nil
+	})
 }
 
 func getBucketNames(db bolt.DB) []string {
@@ -172,5 +222,5 @@ func printLogMsg(message string) {
 }
 
 func argumentError() {
-	log.Fatal("No parameter specified: Use: print-bolt-data create-tables drop-tables")
+	log.Fatal("No parameter specified: Use: print-bolt-data create-tables drop-tables migrate")
 }
