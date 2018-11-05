@@ -5,5 +5,5 @@ pg_port: 5432
 pg_user: "postgres"
 pg_db_name: "postgresdatabase"
 pg_password: "password"
-pg_ssl_mode: "require"
+pg_ssl_mode: "require" # set to disable if no ssl
 log_file: "" # Leave blank to go to STDOUT, otherwise print to a file
