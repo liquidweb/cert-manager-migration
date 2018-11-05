@@ -39,6 +39,7 @@ type conf struct {
 	PostgresUser string `yaml:"pg_user"`
 	PostgresPassword string `yaml:"pg_password"`
 	PostgresSslMode string `yaml:"pg_ssl_mode"`
+	LogFile string `yaml:"log_file"`
 }
 
 func main() {
@@ -49,6 +50,14 @@ func main() {
 
 	var conf conf
 	conf.getConf()
+
+	if conf.LogFile != "" {
+		f, err := os.OpenFile(conf.LogFile, os.O_WRONLY|os.O_CREATE, 0755)
+		if err != nil {
+			log.Fatalf("Error while reading in file: %v", err)
+		}
+		log.SetOutput(f)
+	}
 
 	printLogMsg("Starting Cert Manager Migration")
 	log.Info()

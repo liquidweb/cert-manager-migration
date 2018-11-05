@@ -6,3 +6,4 @@ pg_user: "postgres"
 pg_db_name: "postgresdatabase"
 pg_password: "password"
 pg_ssl_mode: "require"
+log_file: "" # Leave blank to go to STDOUT, otherwise print to a file
