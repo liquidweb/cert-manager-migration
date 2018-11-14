@@ -32,18 +32,20 @@ func createTables(db gorm.DB) {
 	PrintLogMsg("Creating Tables: CERT_DETAILS, DOMAIN_ALTNAMES, USER_INFOS")
 	log.Info()
 
-	db.AutoMigrate(&CertDetail{})
-	db.AutoMigrate(&DomainAltname{})
-	db.AutoMigrate(&UserInfo{})
+	err := migrateTables(db)
+	if err != nil {
+		log.Fatalf("Error while creating database tables: %v", err)
+	}
 }
 
 func dropTables(db gorm.DB) {
 	PrintLogMsg("Dropping Tables: CERT_DETAILS, DOMAIN_ALTNAMES, USER_INFOS")
 	log.Info()
 
-	db.DropTable(&CertDetail{})
-	db.DropTable(&DomainAltname{})
-	db.DropTable(&UserInfo{})
+	err := rollbackTables(db)
+	if err != nil {
+		log.Fatalf("Error while dropping database tables: %v", err)
+	}
 }
 
 func doMigration(postgresDb gorm.DB, boltDb bolt.DB) {
