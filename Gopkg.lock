@@ -76,6 +76,14 @@
   revision = "7e31e0c00fa05cb5fbf4347b585621d6709e19a4"
 
 [[projects]]
+  digest = "1:8a25a0caed8bb7d8ffd0c1d41c8244e32f7d55cb3ac28ceec36562f17480772e"
+  name = "gopkg.in/gormigrate.v1"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "dcfb424b8448715735468fa2f573cce5caca178b"
+  version = "v1.2.1"
+
+[[projects]]
   digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -91,6 +99,7 @@
     "github.com/jinzhu/gorm",
     "github.com/jinzhu/gorm/dialects/postgres",
     "github.com/sirupsen/logrus",
+    "gopkg.in/gormigrate.v1",
     "gopkg.in/yaml.v2",
   ]
   solver-name = "gps-cdcl"
