@@ -1,9 +1,10 @@
-bolt_data_dir: "/path/to/bolt/datadb/directory"
+bolt_data_dir: "/Users/rmacshane/Documents/dev/go/src/github.com/liquidweb/cert-manager-migration"
 bolt_data_file: "data.db"
 pg_host: "127.0.0.1"
 pg_port: 5432
 pg_user: "postgres"
-pg_db_name: "postgresdatabase"
-pg_password: "password"
-pg_ssl_mode: "require" # set to disable if no ssl
+pg_db_name: "gormtest"
+pg_password: "mysecretpassword"
+pg_ssl_mode: "disable" # set to disable if no ssl
 log_file: "" # Leave blank to go to STDOUT, otherwise print to a file
+kube_config_file: "/Users/rmacshane/.kube/config"

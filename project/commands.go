@@ -46,3 +46,10 @@ func Migrate(conf Conf) {
 	defer postgresDb.Close()
 	defer boltDb.Close()
 }
+
+func KubeTest(conf Conf) {
+	PrintLogMsg("Kubernetes Test")
+	log.Info()
+
+	kubeTest(conf)
+}

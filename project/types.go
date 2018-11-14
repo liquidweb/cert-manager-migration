@@ -35,6 +35,7 @@ type Conf struct {
 	PostgresPassword string `yaml:"pg_password"`
 	PostgresSslMode string `yaml:"pg_ssl_mode"`
 	LogFile string `yaml:"log_file"`
+	KubeConfigFile string `yaml:"kube_config_file"`
 }
 
 func (c *Conf) GetConf() *Conf {

@@ -40,6 +40,8 @@ func main() {
 		project.DropTables(conf)
 	case "migrate":
 		project.Migrate(conf)
+	case "kube-test":
+		project.KubeTest(conf)
 	default:
 		project.ArgumentError()
 	}
