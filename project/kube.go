@@ -22,23 +22,24 @@ func kubeTest(conf Conf) {
 		log.Fatal("Failed to create kubernetes client: %v", err)
 	}
 
-	pods, err := client.CoreV1().Pods("").List(metav1.ListOptions{})
-	if err != nil {
-		log.Fatal("Failed to retrieve pods: %v", err)
-		return
-	}
+	defaultSecrets := client.CoreV1().Secrets("default")
+	russtestSecrets := client.CoreV1().Secrets("russtest")
 
-	for _, p := range pods.Items {
-		log.Infof("Found pods: %s/%s", p.Namespace, p.Name)
-	}
-
-	secrets, err := client.CoreV1().Secrets("").List(metav1.ListOptions{})
+	secrets, err := defaultSecrets.List(metav1.ListOptions{})
 	if err != nil {
 		log.Fatal("Failed to retrieve secrets: %v", err)
 		return
 	}
 
 	for _, secret := range secrets.Items {
-		log.Infof("Found secrets: %s/%s", secret.Namespace, secret.Name)
+		if secret.Type == "kubernetes.io/tls" {
+			log.Infof("Copying secret %s from default to russtest", secret.Name)
+			secret.Namespace = "russtest"
+			secret.ResourceVersion = ""
+			_, err := russtestSecrets.Create(&secret)
+			if err != nil {
+				log.Fatalf("Failed to create secret: %v", err)
+			}
+		}
 	}
 }
