@@ -7,3 +7,4 @@ pg_db_name: "postgresdatabase"
 pg_password: "password"
 pg_ssl_mode: "require" # set to disable if no ssl
 log_file: "" # Leave blank to go to STDOUT, otherwise print to a file
+kube_config_file: "/path/to/kube/config/file"
