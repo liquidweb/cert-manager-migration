@@ -52,7 +52,7 @@ func doMigration(postgresDb gorm.DB, boltDb bolt.DB) {
 	PrintLogMsg("Migrating Tables")
 	log.Info()
 
-	boltDb.View(func(tx *bolt.Tx) error {
+	err := boltDb.View(func(tx *bolt.Tx) error {
 		PrintLogMsg("Migrating cert-details into CERT_DETAILS\n")
 		b := tx.Bucket([]byte("cert-details"))
 		c := b.Cursor()
@@ -86,23 +86,31 @@ func doMigration(postgresDb gorm.DB, boltDb bolt.DB) {
 		}
 		return nil
 	})
+	if err != nil {
+		log.Fatalf("Error viewing bolt data: %v", err)
+	}
 }
 
 func getBucketNames(db bolt.DB) []string {
 	var buckets []string
-	db.View(func(tx *bolt.Tx) error {
-		tx.ForEach(func(name []byte, b *bolt.Bucket) error {
+	err := db.View(func(tx *bolt.Tx) error {
+		err := tx.ForEach(func(name []byte, b *bolt.Bucket) error {
 			buckets = append(buckets, string(name))
 			return nil
 		})
+		if err != nil {
+			log.Fatalf("Error grabbing bolt data: %v", err)
+		}
 		return nil
 	})
-
+	if err != nil {
+		log.Fatalf("Error viewing bolt data: %v", err)
+	}
 	return buckets
 }
 
 func printBoltKeyValuePairs(db bolt.DB, bucketNames []string) {
-	db.View(func(tx *bolt.Tx) error {
+	err := db.View(func(tx *bolt.Tx) error {
 		for _, bucket := range bucketNames {
 			PrintLogMsg(fmt.Sprintf("%v", bucket))
 
@@ -116,4 +124,7 @@ func printBoltKeyValuePairs(db bolt.DB, bucketNames []string) {
 		}
 		return nil
 	})
+	if err != nil {
+		log.Fatalf("Error viewing bolt data: %v", err)
+	}
 }

@@ -7,7 +7,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-func kubeTest(conf Conf) {
+func kubeMigrationMain(conf Conf) {
 	if conf.KubeConfigFile == "" {
 		log.Fatal("No Kube Config file specified.")
 	}

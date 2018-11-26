@@ -47,9 +47,9 @@ func Migrate(conf Conf) {
 	defer boltDb.Close()
 }
 
-func KubeTest(conf Conf) {
-	PrintLogMsg("Kubernetes Test")
+func KubeMigrate(conf Conf) {
+	PrintLogMsg("Kubernetes Migration of Certificates and Secrets")
 	log.Info()
 
-	kubeTest(conf)
+	kubeMigrationMain(conf)
 }

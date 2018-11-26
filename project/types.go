@@ -59,5 +59,5 @@ func PrintLogMsg(message string) {
 }
 
 func ArgumentError() {
-	log.Fatal("No parameter specified: Use: print-bolt-data create-tables drop-tables migrate")
+	log.Fatal("No parameter specified: Use: print-bolt-data create-tables drop-tables migrate kube-migrate")
 }
