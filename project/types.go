@@ -26,16 +26,25 @@ type UserInfo struct {
 }
 
 type Conf struct {
-	BoltDataDir string `yaml:"bolt_data_dir"`
-	BoltDataFile string `yaml:"bolt_data_file"`
-	PostgresHost string `yaml:"pg_host"`
-	PostgresPort int `yaml:"pg_port"`
-	PostgresDatabaseName string `yaml:"pg_db_name"`
-	PostgresUser string `yaml:"pg_user"`
-	PostgresPassword string `yaml:"pg_password"`
-	PostgresSslMode string `yaml:"pg_ssl_mode"`
 	LogFile string `yaml:"log_file"`
-	KubeConfigFile string `yaml:"kube_config_file"`
+
+	Bolt struct {
+		DataDir string `yaml:"data_dir"`
+		DataFile string `yaml:"data_file"`
+	}
+
+	Psql struct {
+		Host string `yaml:"host"`
+		Port int `yaml:"port"`
+		DatabaseName string `yaml:"db_name"`
+		User string `yaml:"user"`
+		Password string `yaml:"password"`
+		SslMode string `yaml:"ssl_mode"`
+	}
+
+	Kube struct {
+		ConfigFile string `yaml:"config_file"`
+	}
 }
 
 func (c *Conf) GetConf() *Conf {

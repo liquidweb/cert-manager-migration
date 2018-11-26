@@ -8,11 +8,11 @@ import (
 )
 
 func kubeMigrationMain(conf Conf) {
-	if conf.KubeConfigFile == "" {
+	if conf.Kube.ConfigFile == "" {
 		log.Fatal("No Kube Config file specified.")
 	}
 
-	kubeConfig, err := clientcmd.BuildConfigFromFlags("", conf.KubeConfigFile)
+	kubeConfig, err := clientcmd.BuildConfigFromFlags("", conf.Kube.ConfigFile)
 	if err != nil {
 		log.Fatal("Failed to load client config: %v", err)
 	}

@@ -1,10 +1,13 @@
-bolt_data_dir: "/path/to/bolt/datadb/directory"
-bolt_data_file: "data.db"
-pg_host: "127.0.0.1"
-pg_port: 5432
-pg_user: "postgres"
-pg_db_name: "postgresdatabase"
-pg_password: "password"
-pg_ssl_mode: "require" # set to disable if no ssl
+bolt:
+  data_dir: "/path/to/bolt/datadb/directory"
+  data_file: "data.db"
+psql:
+  host: "127.0.0.1"
+  port: 5432
+  user: "postgres"
+  db_name: "postgresdatabase"
+  password: "password"
+  ssl_mode: "require" # set to disable if no ssl
+kube:
+  config_file: "/path/to/kube/config/file"
 log_file: "" # Leave blank to go to STDOUT, otherwise print to a file
-kube_config_file: "/path/to/kube/config/file"
