@@ -25,21 +25,21 @@ func kubeTest(conf Conf) {
 	defaultSecrets := client.CoreV1().Secrets("default")
 	russtestSecrets := client.CoreV1().Secrets("russtest")
 
-	secrets, err := defaultSecrets.List(metav1.ListOptions{})
+	secrets, err := defaultSecrets.List(metav1.ListOptions{LabelSelector: "creator=kube-cert-manager"})
 	if err != nil {
 		log.Fatal("Failed to retrieve secrets: %v", err)
 		return
 	}
 
 	for _, secret := range secrets.Items {
-		if secret.Type == "kubernetes.io/tls" {
-			log.Infof("Copying secret %s from default to russtest", secret.Name)
-			secret.Namespace = "russtest"
-			secret.ResourceVersion = ""
-			_, err := russtestSecrets.Create(&secret)
-			if err != nil {
-				log.Fatalf("Failed to create secret: %v", err)
-			}
+		log.Infof("Copying secret %s from default to russtest", secret.Name)
+
+		secret.Namespace = "russtest"
+		secret.ResourceVersion = ""
+
+		_, err := russtestSecrets.Create(&secret)
+		if err != nil {
+			log.Fatalf("Failed to create secret: %v", err)
 		}
 	}
 }
