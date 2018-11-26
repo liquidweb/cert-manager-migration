@@ -10,4 +10,6 @@ psql:
   ssl_mode: "require" # set to disable if no ssl
 kube:
   config_file: "/path/to/kube/config/file"
+  src_namespace: "source"
+  dest_namespace: "destination"
 log_file: "" # Leave blank to go to STDOUT, otherwise print to a file

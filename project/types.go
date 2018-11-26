@@ -44,6 +44,8 @@ type Conf struct {
 
 	Kube struct {
 		ConfigFile string `yaml:"config_file"`
+		SourceNamespace string `yaml:"src_namespace"`
+		DestNamespace string `yaml:"dest_namespace"`
 	}
 }
 

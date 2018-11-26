@@ -22,22 +22,26 @@ func kubeMigrationMain(conf Conf) {
 		log.Fatal("Failed to create kubernetes client: %v", err)
 	}
 
-	defaultSecrets := client.CoreV1().Secrets("default")
-	russtestSecrets := client.CoreV1().Secrets("russtest")
+	migrateSecrets(client, conf)
+}
 
-	secrets, err := defaultSecrets.List(metav1.ListOptions{LabelSelector: "creator=kube-cert-manager"})
+func migrateSecrets(client *kubernetes.Clientset, conf Conf) {
+	sourceSecrets := client.CoreV1().Secrets(conf.Kube.SourceNamespace)
+	destSecrets := client.CoreV1().Secrets(conf.Kube.DestNamespace)
+
+	secrets, err := sourceSecrets.List(metav1.ListOptions{LabelSelector: "creator=kube-cert-manager"})
 	if err != nil {
 		log.Fatal("Failed to retrieve secrets: %v", err)
 		return
 	}
 
 	for _, secret := range secrets.Items {
-		log.Infof("Copying secret %s from default to russtest", secret.Name)
+		log.Infof("Copying secret %s from %s to %s", secret.Name, conf.Kube.SourceNamespace, conf.Kube.DestNamespace)
 
-		secret.Namespace = "russtest"
+		secret.Namespace = conf.Kube.DestNamespace
 		secret.ResourceVersion = ""
 
-		_, err := russtestSecrets.Create(&secret)
+		_, err := destSecrets.Create(&secret)
 		if err != nil {
 			log.Fatalf("Failed to create secret: %v", err)
 		}
