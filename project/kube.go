@@ -15,33 +15,45 @@ import (
 var SchemeGroupVersion = schema.GroupVersion{Group: "stable.liquidweb.com", Version: "v1"}
 
 func kubeMigrationMain(conf Conf) {
-	if conf.Kube.ConfigFile == "" {
+	if conf.Kube.SourceConfigFile == "" || conf.Kube.DestConfigFile == "" {
 		log.Fatal("No Kube Config file specified.")
 	}
 
-	kubeConfig, err := clientcmd.BuildConfigFromFlags("", conf.Kube.ConfigFile)
+	sourceClient := buildClients(conf.Kube.SourceConfigFile)
+	destClient := buildClients(conf.Kube.DestConfigFile)
+
+	if sourceClient.KubeConfig.Host == destClient.KubeConfig.Host {
+		log.Fatal("Source and Destination Kube hosts must be different.")
+	}
+
+	migrateSecrets(sourceClient, destClient)
+	migrateCerts(sourceClient, destClient)
+}
+
+func buildClients(configFile string) KubeClient {
+	var client KubeClient
+	var err error
+
+	client.KubeConfig, err = clientcmd.BuildConfigFromFlags("", configFile)
 	if err != nil {
 		log.Fatal("Failed to load client config: %v", err)
 	}
 
-	client, err := kubernetes.NewForConfig(kubeConfig)
+	client.Client, err = kubernetes.NewForConfig(client.KubeConfig)
 	if err != nil {
 		log.Fatal("Failed to create kubernetes client: %v", err)
 	}
 
-	migrateSecrets(client, conf)
-
-	certClient, err := newCertClient(kubeConfig)
+	client.CertClient, err = newCertClient(client.KubeConfig)
 	if err != nil {
 		log.Fatalf("Failed to create certificate client: %v", err)
 	}
 
-	migrateCerts(certClient, conf)
+	return client
 }
 
-func migrateSecrets(client *kubernetes.Clientset, conf Conf) {
-	sourceSecrets := client.CoreV1().Secrets(conf.Kube.SourceNamespace)
-	destSecrets := client.CoreV1().Secrets(conf.Kube.DestNamespace)
+func migrateSecrets(sourceClient KubeClient, destClient KubeClient) {
+	sourceSecrets := sourceClient.Client.CoreV1().Secrets(metav1.NamespaceAll)
 
 	secrets, err := sourceSecrets.List(metav1.ListOptions{LabelSelector: "creator=kube-cert-manager"})
 	if err != nil {
@@ -50,9 +62,9 @@ func migrateSecrets(client *kubernetes.Clientset, conf Conf) {
 	}
 
 	for _, secret := range secrets.Items {
-		log.Infof("Copying secret %s from %s to %s", secret.Name, conf.Kube.SourceNamespace, conf.Kube.DestNamespace)
+		log.Infof("Copying Secret %s/%s from %s to %s", secret.Namespace, secret.Name, sourceClient.KubeConfig.Host, destClient.KubeConfig.Host)
 
-		secret.Namespace = conf.Kube.DestNamespace
+		destSecrets := destClient.Client.CoreV1().Secrets(secret.Namespace)
 		secret.ResourceVersion = ""
 
 		_, err := destSecrets.Create(&secret)
@@ -62,19 +74,18 @@ func migrateSecrets(client *kubernetes.Clientset, conf Conf) {
 	}
 }
 
-func migrateCerts(certClient *rest.RESTClient, conf Conf) {
-	certs, err := getCertificates(certClient, conf.Kube.SourceNamespace)
+func migrateCerts(sourceClient KubeClient, destClient KubeClient) {
+	certs, err := getCertificates(sourceClient.CertClient, metav1.NamespaceAll)
 	if err != nil {
 		log.Fatalf("Error while retrieving certificate: %v.", err)
 	}
 
 	for _, cert := range certs {
-		log.Infof("Copying Certificate %s from %s to %s", cert.Metadata.Name, conf.Kube.SourceNamespace, conf.Kube.DestNamespace)
+		log.Infof("Copying Certificate %s/%s from %s to %s", cert.Metadata.Namespace, cert.Metadata.Name, sourceClient.KubeConfig.Host, destClient.KubeConfig.Host)
 
-		cert.Metadata.Namespace = conf.Kube.DestNamespace
 		cert.Metadata.ResourceVersion = ""
 
-		_, err := createCertificate(certClient, conf.Kube.DestNamespace, &cert)
+		_, err := createCertificate(destClient.CertClient, cert.Metadata.Namespace, &cert)
 		if err != nil {
 			log.Fatalf("Failed to create certificate: %v", err)
 		}

@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 /*
@@ -51,9 +53,8 @@ type Conf struct {
 	}
 
 	Kube struct {
-		ConfigFile string `yaml:"config_file"`
-		SourceNamespace string `yaml:"src_namespace"`
-		DestNamespace string `yaml:"dest_namespace"`
+		SourceConfigFile string `yaml:"src_config_file"`
+		DestConfigFile string `yaml:"dest_config_file"`
 	}
 }
 
@@ -97,6 +98,12 @@ func ( Certificate) DeepCopyObject() runtime.Object {
 func ( CertificateList) DeepCopyObject() runtime.Object {
 	log.Warn("CertificateList DeepCopyObject Not Implemented")
 	return nil
+}
+
+type KubeClient struct {
+	KubeConfig *rest.Config
+	Client *kubernetes.Clientset
+	CertClient *rest.RESTClient
 }
 
 /*
