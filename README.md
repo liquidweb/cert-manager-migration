@@ -11,8 +11,10 @@ Cert Manager Migration from BoltDB to PostgreSQL
    `go build migration.go`
 6. Modify your `conf.yaml` file with appropriate values   
 7. Run this project
-    1. Migrate Data `go run migration.go migrate` 
-    1. Print Bolt Data `go run migration.go print-bolt-data`
-    2. Create DB Tables `go run migration.go create-tables`
-    3. Drop DB Tables `go run migration.go drop-tables`
+    1. Migrate Data `./migration.go migrate` 
+    2. Print Bolt Data `./migration.go print-bolt-data`
+    3. Create DB Tables `./migration.go create-tables`
+    4. Drop DB Tables `./migration.go drop-tables`
+    5. Migrate Certs and Secrets `./migration.go kube-migrate`
+    
    

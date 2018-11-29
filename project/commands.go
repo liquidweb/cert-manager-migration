@@ -46,3 +46,10 @@ func Migrate(conf Conf) {
 	defer postgresDb.Close()
 	defer boltDb.Close()
 }
+
+func KubeMigrate(conf Conf) {
+	PrintLogMsg("Kubernetes Migration of Certificates and Secrets")
+	log.Info()
+
+	kubeMigrationMain(conf)
+}

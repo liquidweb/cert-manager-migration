@@ -9,7 +9,7 @@ import (
 )
 
 func openBoltDb(conf Conf) *bolt.DB {
-	dbPath := path.Join(conf.BoltDataDir, conf.BoltDataFile)
+	dbPath := path.Join(conf.Bolt.DataDir, conf.Bolt.DataFile)
 
 	boltDb, err := bolt.Open(dbPath, 0600, nil)
 	if err != nil {
@@ -20,7 +20,7 @@ func openBoltDb(conf Conf) *bolt.DB {
 }
 
 func openPostgresDb(conf Conf) *gorm.DB {
-	args := fmt.Sprintf("host=%v port=%d user=%v dbname=%v password=%v sslmode=%v", conf.PostgresHost, conf.PostgresPort, conf.PostgresUser, conf.PostgresDatabaseName, conf.PostgresPassword, conf.PostgresSslMode)
+	args := fmt.Sprintf("host=%v port=%d user=%v dbname=%v password=%v sslmode=%v", conf.Psql.Host, conf.Psql.Port, conf.Psql.User, conf.Psql.DatabaseName, conf.Psql.Password, conf.Psql.SslMode)
 	postgresDb, err := gorm.Open("postgres", args)
 	if err != nil {
 		log.Fatalf("Error while connecting to postgres database: %v", err)
@@ -52,7 +52,7 @@ func doMigration(postgresDb gorm.DB, boltDb bolt.DB) {
 	PrintLogMsg("Migrating Tables")
 	log.Info()
 
-	boltDb.View(func(tx *bolt.Tx) error {
+	err := boltDb.View(func(tx *bolt.Tx) error {
 		PrintLogMsg("Migrating cert-details into CERT_DETAILS\n")
 		b := tx.Bucket([]byte("cert-details"))
 		c := b.Cursor()
@@ -86,23 +86,31 @@ func doMigration(postgresDb gorm.DB, boltDb bolt.DB) {
 		}
 		return nil
 	})
+	if err != nil {
+		log.Fatalf("Error viewing bolt data: %v", err)
+	}
 }
 
 func getBucketNames(db bolt.DB) []string {
 	var buckets []string
-	db.View(func(tx *bolt.Tx) error {
-		tx.ForEach(func(name []byte, b *bolt.Bucket) error {
+	err := db.View(func(tx *bolt.Tx) error {
+		err := tx.ForEach(func(name []byte, b *bolt.Bucket) error {
 			buckets = append(buckets, string(name))
 			return nil
 		})
+		if err != nil {
+			log.Fatalf("Error grabbing bolt data: %v", err)
+		}
 		return nil
 	})
-
+	if err != nil {
+		log.Fatalf("Error viewing bolt data: %v", err)
+	}
 	return buckets
 }
 
 func printBoltKeyValuePairs(db bolt.DB, bucketNames []string) {
-	db.View(func(tx *bolt.Tx) error {
+	err := db.View(func(tx *bolt.Tx) error {
 		for _, bucket := range bucketNames {
 			PrintLogMsg(fmt.Sprintf("%v", bucket))
 
@@ -116,4 +124,7 @@ func printBoltKeyValuePairs(db bolt.DB, bucketNames []string) {
 		}
 		return nil
 	})
+	if err != nil {
+		log.Fatalf("Error viewing bolt data: %v", err)
+	}
 }
