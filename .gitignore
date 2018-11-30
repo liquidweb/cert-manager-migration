@@ -1,6 +1,6 @@
 vendor
 .idea
 *~
-migration
-migration.exe
+cert-manager-migration
+cert-manager-migration.exe
 data.db
