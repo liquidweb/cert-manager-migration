@@ -3,8 +3,7 @@ package project
 import (
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
+	"github.com/spf13/viper"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -36,25 +35,25 @@ type UserInfo struct {
 	Configuration File Definition
  */
 type Conf struct {
-	LogFile string `yaml:"log_file"`
+	LogFile string `mapstructure:"log_file"`
 
 	Bolt struct {
-		DataDir string `yaml:"data_dir"`
-		DataFile string `yaml:"data_file"`
+		DataDir string `mapstructure:"data_dir"`
+		DataFile string `mapstructure:"data_file"`
 	}
 
 	Psql struct {
-		Host string `yaml:"host"`
-		Port int `yaml:"port"`
-		DatabaseName string `yaml:"db_name"`
-		User string `yaml:"user"`
-		Password string `yaml:"password"`
-		SslMode string `yaml:"ssl_mode"`
+		Host string `mapstructure:"host"`
+		Port int `mapstructure:"port"`
+		DatabaseName string `mapstructure:"db_name"`
+		User string `mapstructure:"user"`
+		Password string `mapstructure:"password"`
+		SslMode string `mapstructure:"ssl_mode"`
 	}
 
 	Kube struct {
-		SourceConfigFile string `yaml:"src_config_file"`
-		DestConfigFile string `yaml:"dest_config_file"`
+		SourceConfigFile string `mapstructure:"src_config_file"`
+		DestConfigFile string `mapstructure:"dest_config_file"`
 	}
 }
 
@@ -109,18 +108,21 @@ type KubeClient struct {
 /*
 	Utility Functions
  */
-func (c *Conf) GetConf() *Conf {
-	yamlFile, err := ioutil.ReadFile("conf.yaml")
+func (conf *Conf) GetConf() *Conf {
+	viper.AddConfigPath(".")
+	viper.SetConfigName("conf")
+
+	err := viper.ReadInConfig()
 	if err != nil {
-		log.Fatalf("yamlFile.Get err   #%v ", err)
+		log.Fatalf("Fatal error config file: %s", err)
 	}
 
-	err = yaml.Unmarshal(yamlFile, c)
+	err = viper.Unmarshal(&conf)
 	if err != nil {
-		log.Fatalf("Unmarshal: %v", err)
+		log.Fatal("Unable to unmarshal config")
 	}
 
-	return c
+	return conf
 }
 
 func PrintLogMsg(message string) {
