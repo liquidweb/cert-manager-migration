@@ -42,6 +42,8 @@ func main() {
 		project.Migrate(conf)
 	case "kube-migrate":
 		project.KubeMigrate(conf)
+	case "dummy-cert":
+		project.DummyCert(conf)
 	default:
 		project.ArgumentError()
 	}

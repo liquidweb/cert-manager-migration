@@ -30,6 +30,34 @@ func kubeMigrationMain(conf Conf) {
 	migrateCerts(sourceClient, destClient)
 }
 
+func createDummyCert(conf Conf) {
+	if conf.Kube.SourceConfigFile == "" || conf.Kube.DestConfigFile == "" {
+		log.Fatal("No Kube Config file specified.")
+	}
+
+	client := buildClients(conf.Kube.SourceConfigFile)
+
+	dummyCert := Certificate{
+		Metadata: metav1.ObjectMeta{
+			Name: "dummy-certobj",
+		},
+		Spec: CertificateSpec {
+			Domain: "www.dummy-certificate.com",
+			Provider: "http",
+			Email: "russellmacshane@gmail.com",
+			SecretName: "dummy-certobj-tls",
+			AltNames: []string{"dummy-certificate.com"},
+		},
+		Status: CertificateStatus {
+
+		},
+	}
+	_, err := createCertificate(client.CertClient, "default", &dummyCert)
+	if err != nil {
+		log.Fatalf("Failed to create certificate: %v", err)
+	}
+}
+
 func buildClients(configFile string) KubeClient {
 	var client KubeClient
 	var err error

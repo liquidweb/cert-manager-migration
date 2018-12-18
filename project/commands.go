@@ -53,3 +53,10 @@ func KubeMigrate(conf Conf) {
 
 	kubeMigrationMain(conf)
 }
+
+func DummyCert(conf Conf) {
+	PrintLogMsg("Create a Dummy Certificate")
+	log.Info()
+
+	createDummyCert(conf)
+}
