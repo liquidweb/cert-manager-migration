@@ -11,4 +11,6 @@ psql:
 kube:
   src_config_file: "/path/to/kube/source/config/file"
   dest_config_file: "/path/to/kube/destination/config/file"
+  src_namespace: ""
+  dest_namespace: ""
 log_file: "" # Leave blank to go to STDOUT, otherwise print to a file
