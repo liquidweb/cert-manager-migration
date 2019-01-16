@@ -54,6 +54,8 @@ type Conf struct {
 	Kube struct {
 		SourceConfigFile string `mapstructure:"src_config_file"`
 		DestConfigFile string `mapstructure:"dest_config_file"`
+		SourceNamespace string `mapstructure:"src_namespace"`
+		DestNamespace string `mapstructure:"dest_namespace"`
 	}
 }
 
@@ -103,6 +105,7 @@ type KubeClient struct {
 	KubeConfig *rest.Config
 	Client *kubernetes.Clientset
 	CertClient *rest.RESTClient
+	Namespace string
 }
 
 /*
